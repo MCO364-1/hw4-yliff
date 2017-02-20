@@ -1,5 +1,7 @@
 package mco364;
 
+//not finished
+
 import static mco364.GameOfLife.XX;
 import static mco364.GameOfLife.__;
 
