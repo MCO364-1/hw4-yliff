@@ -1,193 +1,269 @@
 package mco364;
 
-//not finished
-
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+class Grid {
+
+    int size;
+    boolean b[][];
+
+    public int getSize() {
+        return size;
+    }
+
+    Grid(int size) {
+        this.size = size;
+        b = new boolean[size][size];
+    }
+
+    public void print() {
+        String horizontalLine = new String(new char[size * 4]).replace("\0", "-");
+        System.out.println(horizontalLine);
+
+        for (int i = 0; i < size; i++) {
+            System.out.print("|");
+            for (int j = 0; j < size; j++) {
+                System.out.print(b[i][j] ? " O |" : "   |");
+            }
+            System.out.println();
+            System.out.println(horizontalLine);
+        }
+    }
+
+    public void clear() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                b[i][j] = false;
+            }
+        }
+    }
+}
 
 public class GameOfLife {
 
-    public static final boolean XX = true, __ = false;
+    public enum Oscillation {
 
-    private final int size;
-    boolean board[][];
-
-    boolean[][] boardCopy;
-
-    GameOfLife() {
-        this(20);
+        BLINKER, TOAD, BEACON, PULSAR, PENTADECATHOLON
     }
 
-    GameOfLife(int size) {
-        this.size = size;
-        board = new boolean[size][size];
-        boardCopy = new boolean[size][size];
-    }
+    private static class Cell {
 
-    public void seed(boolean seed[][]) {
-        for (int i = 0; i < seed.length; i++) {
-            System.arraycopy(seed[i], 0, board[i], 0, seed[i].length);
+        private final int row;
+        private final int col;
+
+        public Cell(int row, int col) {
+            this.row = row;
+            this.col = col;
         }
     }
 
-    public int neighborCount(int row, int col) {
-        int neighborCounter = 0;
-        int colMin = Math.max(0, col - 1), colMax = Math.min(size - 1, col + 1);
-        int rowMin = Math.max(0, row - 1), rowMax = Math.min(size - 1, row + 1);
+    private Grid grid;
+    private int size;
+    private Oscillation osc;
+    private List<Cell> aliveCells;
 
-        for (int i = rowMin; i <= rowMax; i++) {
-            for (int j = colMin; j <= colMax; j++) {
-                if (board[i][j] && !(i == row && j == col)) // ignore "center" cell
-                {
-                    neighborCounter++;
-                }
-            }
-        }
-        return neighborCounter;
+    public GameOfLife(Grid grd, int grdSize, Oscillation o) {
+        this.grid = grd;
+        this.size = grdSize;
+        osc = o;
+        aliveCells = new ArrayList<>();
     }
 
-    public boolean isAliveNextGeneration(int row, int col) {
-        int totalNeighborCount = neighborCount(row, col);
-        if (!board[row][col]) {
-            return totalNeighborCount == 3;
+    public void seedOscillation() {
+        if (osc == Oscillation.BLINKER) {
+            grid.b[1][2] = true;
+            grid.b[2][2] = true;
+            grid.b[3][2] = true;
         }
-
-        return (totalNeighborCount == 2 || totalNeighborCount == 3);
+        if (osc == Oscillation.TOAD) {
+            grid.b[2][1] = true;
+            grid.b[1][2] = true;
+            grid.b[2][2] = true;
+            grid.b[1][3] = true;
+            grid.b[1][4] = true;
+            grid.b[2][3] = true;
+        }
+        if (osc == Oscillation.BEACON) {
+            grid.b[1][1] = true;
+            grid.b[1][2] = true;
+            grid.b[2][1] = true;
+            grid.b[2][2] = true;
+            grid.b[3][3] = true;
+            grid.b[3][4] = true;
+            grid.b[4][3] = true;
+            grid.b[4][4] = true;
+        }
+        if (osc == Oscillation.PULSAR) {
+            grid.b[6][8] = true;
+            grid.b[6][9] = true;
+            grid.b[6][10] = true;
+            grid.b[6][14] = true;
+            grid.b[6][15] = true;
+            grid.b[6][16] = true;
+            grid.b[8][6] = true;
+            grid.b[8][11] = true;
+            grid.b[8][13] = true;
+            grid.b[8][18] = true;
+            grid.b[9][6] = true;
+            grid.b[9][11] = true;
+            grid.b[9][13] = true;
+            grid.b[9][18] = true;
+            grid.b[10][6] = true;
+            grid.b[10][11] = true;
+            grid.b[10][13] = true;
+            grid.b[10][18] = true;
+            grid.b[11][8] = true;
+            grid.b[11][9] = true;
+            grid.b[11][10] = true;
+            grid.b[11][14] = true;
+            grid.b[11][15] = true;
+            grid.b[11][16] = true;
+            grid.b[13][8] = true;
+            grid.b[13][9] = true;
+            grid.b[13][10] = true;
+            grid.b[13][14] = true;
+            grid.b[13][15] = true;
+            grid.b[13][16] = true;
+            grid.b[14][6] = true;
+            grid.b[14][11] = true;
+            grid.b[14][13] = true;
+            grid.b[14][18] = true;
+            grid.b[15][6] = true;
+            grid.b[15][11] = true;
+            grid.b[15][13] = true;
+            grid.b[15][18] = true;
+            grid.b[16][6] = true;
+            grid.b[16][11] = true;
+            grid.b[16][13] = true;
+            grid.b[16][18] = true;
+            grid.b[18][8] = true;
+            grid.b[18][9] = true;
+            grid.b[18][10] = true;
+            grid.b[18][14] = true;
+            grid.b[18][15] = true;
+            grid.b[18][16] = true;
+        }
+        if (osc == Oscillation.PENTADECATHOLON) {
+            grid.b[4][5] = true;
+            grid.b[5][5] = true;
+            grid.b[6][4] = true;
+            grid.b[6][6] = true;
+            grid.b[7][5] = true;
+            grid.b[8][5] = true;
+            grid.b[9][5] = true;
+            grid.b[10][5] = true;
+            grid.b[11][4] = true;
+            grid.b[11][6] = true;
+            grid.b[12][5] = true;
+            grid.b[13][5] = true;
+        }
+        grid.print();
     }
 
-    public void updateToNextGeneration() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                setCellBoardCopy(i, j, isAliveNextGeneration(i, j));
-            }
+    public void play() {
+        ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(10);
+        for (int threadNum = 0; threadNum < 25; threadNum++) {
+            Thread t = new Thread(new Gen(threadNum));
+            pool.execute(t);
         }
-        board = boardCopy;
+        pool.shutdown();
+
+        while (!pool.isTerminated()) {
+            //purpose is so thread will have time to complete
+        }
+        grid.clear();
+
+        for (Cell c : aliveCells) {
+            grid.b[c.row][c.col] = true;
+        }
+
+        grid.print();
+        aliveCells.clear();
     }
 
-    class LifeThread implements Runnable {
+    class Gen implements Runnable {
 
-        private int min;
-        private int max;
+        private int startPt;
+        private int endPt;
 
-        LifeThread(int min, int max) {
-            this.min = min;
-            this.max = max;
-
+        public Gen(int startPt) {
+            this.startPt = startPt;
+            this.endPt = size;
         }
 
         @Override
         public void run() {
-            for (int i = min; i < max; i++) {
-                int row = i / size;
-                int col = i % size;
-
-                boolean isAlive = isAliveNextGeneration(row, col);
-                setCellBoardCopy(row, col, isAlive);
+            if (startPt <= size) {
+                for (int i = 0; i <= endPt; i++) {
+                    if (isAliveNextGeneration(startPt, i)) {
+                        aliveCells.add(new Cell(startPt, i));
+                    }
+                }
             }
         }
-    }
 
-    public void updateToNextGenerationMT(int threadCount) {
-        ExecutorService ex = Executors.newFixedThreadPool(threadCount);
-        double averageSizePerThread = (double) size * size / threadCount;
+        public int neighborCount(int row, int col) {
+            int count = 0;
 
-        for (int threadNum = 0; threadNum < threadCount; threadNum++) {
-            int min = (int) (threadNum * averageSizePerThread);
-            int max = (int) ((threadNum + 1) * averageSizePerThread);
-            LifeThread t = new LifeThread(min, max);
-            ex.execute(t);
-        }
-        ex.shutdown();
-        try {
-            ex.awaitTermination(1, TimeUnit.HOURS);
-        } catch (InterruptedException ex1) {
-
-        }
-
-        boolean[][] temp = board;
-        board = boardCopy;
-        boardCopy = temp;
-    }
-
-    private synchronized void setCellBoardCopy(int i, int j, boolean value) {
-        boardCopy[i][j] = value;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                sb.append(board[i][j] ? "X" : " ");
+            if (isOnGrid(row, col + 1)) {
+                if (grid.b[row][col + 1]) {
+                    count++;
+                }
             }
-            sb.append(System.lineSeparator());
+            if (isOnGrid(row, col - 1)) {
+                if (grid.b[row][col - 1]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row + 1, col)) {
+                if (grid.b[row + 1][col]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row - 1, col)) {
+                if (grid.b[row - 1][col]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row - 1, col - 1)) {
+                if (grid.b[row - 1][col - 1]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row - 1, col + 1)) {
+                if (grid.b[row - 1][col + 1]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row + 1, col - 1)) {
+                if (grid.b[row + 1][col - 1]) {
+                    count++;
+                }
+            }
+            if (isOnGrid(row + 1, col + 1)) {
+                if (grid.b[row + 1][col + 1]) {
+                    count++;
+                }
+            }
+
+            return count;
         }
-        return sb.toString();
+
+        public boolean isOnGrid(int row, int col) {
+            return (row >= 0 && row <= size && col >= 0 && col <= size);
+        }
+
+        public boolean isAliveNextGeneration(int row, int col) {
+
+            if (!grid.b[row][col]) {
+                return neighborCount(row, col) == 3;
+            }
+
+            return neighborCount(row, col) == 2 || neighborCount(row, col) == 3;
+        }
+
     }
 
-    static final boolean[][] blinker = new boolean[][]{
-        {__, __, __, __, __},
-        {__, __, XX, __, __},
-        {__, __, XX, __, __},
-        {__, __, XX, __, __},
-        {__, __, __, __, __},};
-
-    static final boolean[][] toad = new boolean[][]{
-        {__, __, __, __, __, __},
-        {__, __, __, __, __, __},
-        {__, __, XX, XX, XX, __},
-        {__, XX, XX, XX, __, __},
-        {__, __, __, __, __, __},
-        {__, __, __, __, __, __},};
-
-    static final boolean[][] beacon = new boolean[][]{
-        {__, __, __, __, __, __},
-        {__, XX, XX, __, __, __},
-        {__, XX, XX, __, __, __},
-        {__, __, __, XX, XX, __},
-        {__, __, __, XX, XX, __},
-        {__, __, __, __, __, __},};
-
-    static final boolean[][] pulsar = new boolean[][]{
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, XX, XX, XX, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, XX, XX, XX, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, XX, XX, XX, __, __, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, XX, __, __, __, __, __, __, __, __, __, __, __, XX, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, XX, XX, XX, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __},};
-
-    static final boolean[][] pentadecathlon = new boolean[][]{
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, XX, __, __, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, __},
-        {__, __, __, XX, XX, XX, XX, XX, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, XX, XX, XX, XX, XX, __, __, __},
-        {__, __, __, __, XX, XX, XX, __, __, __, __},
-        {__, __, __, __, __, XX, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},
-        {__, __, __, __, __, __, __, __, __, __, __},};
 }
