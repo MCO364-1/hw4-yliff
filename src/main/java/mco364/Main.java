@@ -1,53 +1,54 @@
 package mco364;
 
-//not finished
-
-import java.awt.Robot;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static mco364.GameOfLife.XX;
-import static mco364.GameOfLife.__;
+import mco364.GameOfLife.Oscillation;
 
 public class Main {
 
-    public static void main(String[] args) {
-        clearConsole();
+    public static void main(String[] args) throws InterruptedException {
 
-        GameOfLife life = new GameOfLife(18);
+        Grid myGrid = null;
+        boolean stopExec = false;
         Scanner kb = new Scanner(System.in);
 
-        System.out.println("Select which oscillation you wish to see:\n"
-                + "1 for Blinker, 2 for Toad, 3 for Beacon, "
-                + "4 for Pulsar, 5 for Pentadecathlon ");
+        System.out.println("Select an Oscillation:\n"
+                + "BLINKER, TOAD, BEACON, PULSAR, PENTADECATHOLON (copy & paste)");
 
-        int selection = kb.nextInt();
-        if (selection == 1) {
-            life.seed(GameOfLife.blinker);
-        }
-        if (selection == 2) {
-            life.seed(GameOfLife.toad);
-        }
-        if (selection == 3) {
-            life.seed(GameOfLife.beacon);
-        }
-        if (selection == 4) {
-            life.seed(GameOfLife.pulsar);
-        }
-        if (selection == 5) {
-            life.seed(GameOfLife.pentadecathlon);
+        Oscillation osc = Oscillation.valueOf(kb.nextLine());
+
+        System.out.println("Select how to go through the gereations:\n"
+                + "A to automate \n"
+                + "S for step through manually");
+        String method = kb.nextLine();
+
+        if (osc == Oscillation.PULSAR || osc == Oscillation.PENTADECATHOLON) {
+            myGrid = new Grid(20);
         } else {
-            System.out.println("Invalid Selection");
-            System.exit(0);
+            myGrid = new Grid(5);
         }
 
-        for (int i = 0; i < 10; i++) {
-            System.out.println(life);
-            life.updateToNextGenerationMT(7);
-            sleep(1000);
-            clearConsole();
+        GameOfLife game = new GameOfLife(myGrid, myGrid.size - 1, osc);
+        game.seedOscillation();
+
+        if (method.equals("A")) {
+            while (!stopExec) {
+                game.play();
+                sleep(500);
+                clearConsole();
+            }
+        } else {
+            while (!stopExec) {
+                game.play();
+                System.out.println("Enter 1 to continue, 0 to exit");
+                int input = kb.nextInt();
+                clearConsole();
+
+                if (input == 0) {
+                    stopExec = true;
+                }
+            }
         }
+
     }
 
     public final static void clearConsole() {
