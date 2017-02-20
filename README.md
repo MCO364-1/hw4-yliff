@@ -40,5 +40,4 @@ public class GameOfLife {
 1. Use best practices and clean code
 1. Add the yml file (change as needed) so that Travis will run your tests
 
-
 [![Build Status](https://travis-ci.org/MCO364-1/hw4-yliff.svg?branch=master)](https://travis-ci.org/MCO364-1/hw4-yliff)
